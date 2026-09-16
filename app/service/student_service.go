@@ -66,7 +66,9 @@ func (s *StudentService) List(
 			c,
 			fiber.StatusInternalServerError,
 			"gagal mengambil daftar student",
-			nil,
+			map[string]string{
+				"error": err.Error(),
+			},
 		)
 	}
 

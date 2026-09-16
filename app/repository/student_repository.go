@@ -180,6 +180,7 @@ func (r *studentRepositoryImpl) List(
 
 	for rows.Next() {
 		var student model.Student
+		var ownerID *int
 
 		if err := rows.Scan(
 			&student.ID,
@@ -187,9 +188,13 @@ func (r *studentRepositoryImpl) List(
 			&student.Name,
 			&student.Grade,
 			&student.IsActive,
-			&student.OwnerID,
+			&ownerID,
 		); err != nil {
 			return nil, 0, err
+		}
+
+		if ownerID != nil {
+			student.OwnerID = *ownerID
 		}
 
 		result = append(result, student)
@@ -208,6 +213,7 @@ func (r *studentRepositoryImpl) FindByID(
 ) (*model.Student, error) {
 
 	var student model.Student
+	var ownerID *int
 
 	err := r.DB.QueryRow(
 		ctx,
@@ -229,8 +235,12 @@ func (r *studentRepositoryImpl) FindByID(
 		&student.Name,
 		&student.Grade,
 		&student.IsActive,
-		&student.OwnerID,
+		&ownerID,
 	)
+
+	if ownerID != nil {
+		student.OwnerID = *ownerID
+	}
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -250,6 +260,7 @@ func (r *studentRepositoryImpl) Create(
 ) (*model.Student, error) {
 
 	var student model.Student
+	var retOwnerID *int
 
 	err := r.DB.QueryRow(
 		ctx,
@@ -281,8 +292,12 @@ func (r *studentRepositoryImpl) Create(
 		&student.Name,
 		&student.Grade,
 		&student.IsActive,
-		&student.OwnerID,
+		&retOwnerID,
 	)
+
+	if retOwnerID != nil {
+		student.OwnerID = *retOwnerID
+	}
 
 	if err != nil {
 		return nil, err
@@ -298,6 +313,7 @@ func (r *studentRepositoryImpl) Replace(
 ) (*model.Student, error) {
 
 	var student model.Student
+	var ownerID *int
 
 	err := r.DB.QueryRow(
 		ctx,
@@ -328,8 +344,12 @@ func (r *studentRepositoryImpl) Replace(
 		&student.Name,
 		&student.Grade,
 		&student.IsActive,
-		&student.OwnerID,
+		&ownerID,
 	)
+
+	if ownerID != nil {
+		student.OwnerID = *ownerID
+	}
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -416,6 +436,7 @@ func (r *studentRepositoryImpl) Patch(
 	)
 
 	var student model.Student
+	var ownerID *int
 
 	err := r.DB.QueryRow(
 		ctx,
@@ -427,8 +448,12 @@ func (r *studentRepositoryImpl) Patch(
 		&student.Name,
 		&student.Grade,
 		&student.IsActive,
-		&student.OwnerID,
+		&ownerID,
 	)
+
+	if ownerID != nil {
+		student.OwnerID = *ownerID
+	}
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
