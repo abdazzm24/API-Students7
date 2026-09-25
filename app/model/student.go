@@ -9,24 +9,31 @@ type Student struct {
 	OwnerID  int     `json:"owner_id"`
 }
 
+// Request POST /students
 type CreateStudentRequest struct {
-	NIM      string  `json:"nim"`
-	Name     string  `json:"name"`
-	Grade    float64 `json:"grade"`
+	NIM      string  `json:"nim" validate:"required,nim"`
+	Name     string  `json:"name" validate:"required,notblank,min=2,max=100"`
+	Grade    float64 `json:"grade" validate:"min=0,max=100"`
 	IsActive bool    `json:"is_active"`
 }
 
+// Request PUT /students/:id
 type ReplaceStudentRequest struct {
-	NIM      string  `json:"nim"`
-	Name     string  `json:"name"`
-	Grade    float64 `json:"grade"`
+	NIM      string  `json:"nim" validate:"required,nim"`
+	Name     string  `json:"name" validate:"required,notblank,min=2,max=100"`
+	Grade    float64 `json:"grade" validate:"min=0,max=100"`
 	IsActive bool    `json:"is_active"`
 }
 
+// Request PATCH /students/:id
+//
+// Pointer digunakan agar dapat membedakan:
+// nil       = field tidak dikirim
+// non-nil   = field dikirim
 type PatchStudentRequest struct {
-	NIM      *string  `json:"nim,omitempty"`
-	Name     *string  `json:"name,omitempty"`
-	Grade    *float64 `json:"grade,omitempty"`
+	NIM      *string  `json:"nim,omitempty" validate:"omitnil,nim"`
+	Name     *string  `json:"name,omitempty" validate:"omitnil,notblank,min=2,max=100"`
+	Grade    *float64 `json:"grade,omitempty" validate:"omitnil,min=0,max=100"`
 	IsActive *bool    `json:"is_active,omitempty"`
 }
 
@@ -38,6 +45,8 @@ type WebResponse struct {
 	Errors  any    `json:"errors,omitempty"`
 }
 
+// Pagination lama.
+// Masih dipertahankan sampai tahap cursor pagination.
 type Meta struct {
 	Page       int `json:"page"`
 	Limit      int `json:"limit"`

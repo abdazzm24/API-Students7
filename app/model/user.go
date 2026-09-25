@@ -12,31 +12,34 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// CreateUserRequest digunakan oleh POST /users.
-//
-// Role sengaja tidak ada di sini agar client tidak bisa
-// melakukan mass assignment menjadi admin.
 type CreateUserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Email    string `json:"email" validate:"required,email,max=120"`
+	Password string `json:"password" validate:"required,min=8,max=72,nospace"`
 }
 
-// ReplaceUserRequest digunakan oleh PUT /users/:id.
 type ReplaceUserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	Username string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Email    string `json:"email" validate:"required,email,max=120"`
 	IsActive bool   `json:"is_active"`
 }
 
-// PatchUserRequest digunakan oleh PATCH /users/:id.
+// Pada PATCH, pointer membedakan:
+//
+// nil
+// = field tidak dikirim
+//
+// pointer berisi nilai
+// = field dikirim.
+//
+// omitnil digunakan supaya validation hanya dijalankan
+// ketika field memang memiliki nilai.
 type PatchUserRequest struct {
-	Username *string `json:"username,omitempty"`
-	Email    *string `json:"email,omitempty"`
+	Username *string `json:"username,omitempty" validate:"omitnil,min=3,max=30,alphanum"`
+	Email    *string `json:"email,omitempty" validate:"omitnil,email,max=120"`
 	IsActive *bool   `json:"is_active,omitempty"`
 }
 
-// AssignRoleRequest digunakan oleh PATCH /users/:id/role.
 type AssignRoleRequest struct {
 	Role string `json:"role"`
 }
