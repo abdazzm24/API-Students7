@@ -32,6 +32,14 @@ func RequestContext(
 	)
 }
 
+func ParamID(c *fiber.Ctx) (int, bool) {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil || id < 1 {
+		return 0, false
+	}
+	return id, true
+}
+
 func ParseID(c *fiber.Ctx) (int, error) {
 
 	id, err := strconv.Atoi(
@@ -45,6 +53,45 @@ func ParseID(c *fiber.Ctx) (int, error) {
 	}
 
 	return id, nil
+}
+
+func ParseCursorQuery(c *fiber.Ctx) (model.CursorQuery, error) {
+	limit := c.QueryInt("limit", 10)
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	search := strings.TrimSpace(c.Query("search"))
+	cursorStr := strings.TrimSpace(c.Query("cursor"))
+
+	var after *model.Cursor
+	if cursorStr != "" {
+		cur, err := DecodeCursor(cursorStr)
+		if err != nil {
+			return model.CursorQuery{}, BadRequest("cursor tidak valid")
+		}
+		after = &cur
+	}
+
+	query := model.CursorQuery{
+		Limit:  limit,
+		Cursor: cursorStr,
+		After:  after,
+		Search: search,
+	}
+
+	if active := c.Context().QueryArgs().Peek("is_active"); len(active) > 0 {
+		value, err := strconv.ParseBool(string(active))
+		if err != nil {
+			return model.CursorQuery{}, BadRequest("is_active harus true atau false")
+		}
+		query.IsActive = &value
+	}
+
+	return query, nil
 }
 
 func ParseListQuery(

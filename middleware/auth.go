@@ -25,12 +25,7 @@ func RequireAuth(
 				`Bearer realm="api"`,
 			)
 
-			return helper.Fail(
-				c,
-				fiber.StatusUnauthorized,
-				"header Authorization tidak ada atau salah bentuk",
-				nil,
-			)
+			return helper.Unauthorized("header Authorization tidak ada atau salah bentuk")
 		}
 
 		authUser, err := jwtManager.Parse(token)
@@ -47,20 +42,10 @@ func RequireAuth(
 				helper.ErrExpiredToken,
 			) {
 
-				return helper.Fail(
-					c,
-					fiber.StatusUnauthorized,
-					"access token kedaluwarsa",
-					nil,
-				)
+				return helper.Unauthorized("access token kedaluwarsa")
 			}
 
-			return helper.Fail(
-				c,
-				fiber.StatusUnauthorized,
-				"access token tidak valid",
-				nil,
-			)
+			return helper.Unauthorized("access token tidak valid")
 		}
 
 		c.Locals(
@@ -139,12 +124,7 @@ func LoginRateLimiter() fiber.Handler {
 					"60",
 				)
 
-				return helper.Fail(
-					c,
-					fiber.StatusTooManyRequests,
-					"terlalu banyak percobaan login, coba lagi dalam satu menit",
-					nil,
-				)
+				return helper.TooManyRequests("terlalu banyak percobaan login, coba lagi dalam satu menit")
 			},
 		},
 	)

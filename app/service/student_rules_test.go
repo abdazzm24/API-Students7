@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"api-students/app/model"
+	"api-students/helper"
 )
 
 func TestValidateCreateRequest(t *testing.T) {
@@ -15,7 +16,7 @@ func TestValidateCreateRequest(t *testing.T) {
 		IsActive: true,
 	}
 
-	errors := ValidateCreateRequest(req)
+	errors := helper.ValidateStruct(req)
 
 	if len(errors) != 3 {
 		t.Fatalf(
@@ -33,7 +34,7 @@ func TestValidatePatchRequest(t *testing.T) {
 		Name: &name,
 	}
 
-	errors := ValidatePatchRequest(req)
+	errors := helper.ValidateStruct(req)
 
 	if len(errors) != 1 {
 		t.Fatalf(

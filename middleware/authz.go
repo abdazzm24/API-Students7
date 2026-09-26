@@ -20,44 +20,25 @@ func RequirePermission(
 	requiredPermission string,
 ) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Mengambil identitas user dari context Fiber.
 		currentUser, exists := helper.CurrentUser(c)
 
-		// Jika identitas tidak ditemukan,
-		// berarti user belum terautentikasi.
 		if !exists {
-			return c.Status(fiber.StatusUnauthorized).JSON(
-				fiber.Map{
-					"success": false,
-					"message": "unauthorized",
-				},
-			)
+			return helper.Unauthorized("belum terautentikasi")
 		}
 
-		// Memeriksa permission berdasarkan role.
 		allowed := permissions.Can(
 			currentUser.Role,
 			requiredPermission,
 		)
 
 		if !allowed {
-			return c.Status(fiber.StatusForbidden).JSON(
-				fiber.Map{
-					"success": false,
-					"message": "forbidden",
-				},
-			)
+			return helper.Forbidden("tidak berhak mengakses resource ini")
 		}
 
 		return c.Next()
 	}
 }
 
-// RequireRole membatasi endpoint berdasarkan role.
-//
-// Middleware ini bersifat opsional.
-// Untuk pembatasan yang lebih fleksibel, gunakan
-// RequirePermission.
 func RequireRole(
 	allowedRoles ...string,
 ) fiber.Handler {
@@ -65,12 +46,7 @@ func RequireRole(
 		currentUser, exists := helper.CurrentUser(c)
 
 		if !exists {
-			return c.Status(fiber.StatusUnauthorized).JSON(
-				fiber.Map{
-					"success": false,
-					"message": "unauthorized",
-				},
-			)
+			return helper.Unauthorized("belum terautentikasi")
 		}
 
 		for _, role := range allowedRoles {
@@ -79,11 +55,6 @@ func RequireRole(
 			}
 		}
 
-		return c.Status(fiber.StatusForbidden).JSON(
-			fiber.Map{
-				"success": false,
-				"message": "forbidden",
-			},
-		)
+		return helper.Forbidden("role tidak berhak mengakses resource ini")
 	}
 }

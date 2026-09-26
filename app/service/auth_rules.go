@@ -2,45 +2,13 @@ package service
 
 import (
 	"strings"
-	"unicode"
 
 	"api-students/app/model"
 )
 
-const minPasswordLength = 8
-
-func ValidateRegister(
-	req model.RegisterRequest,
-) map[string]string {
-
-	errs := map[string]string{}
-
-	username := strings.TrimSpace(req.Username)
-	email := strings.TrimSpace(req.Email)
-
-	switch {
-	case username == "":
-		errs["username"] = "wajib diisi"
-
-	case len(username) < 3:
-		errs["username"] = "minimal 3 karakter"
-
-	case !isValidUsername(username):
-		errs["username"] =
-			"hanya boleh huruf, angka, titik, dan garis bawah"
-	}
-
-	if !isValidEmail(email) {
-		errs["email"] = "format email tidak valid"
-	}
-
-	if msg := checkPasswordStrength(req.Password); msg != "" {
-		errs["password"] = msg
-	}
-
-	return errs
-}
-
+// ValidateLogin masih digunakan sementara
+// sampai auth_service.go diubah menggunakan
+// helper.ValidateStruct().
 func ValidateLogin(
 	req model.LoginRequest,
 ) map[string]string {
@@ -58,88 +26,12 @@ func ValidateLogin(
 	return errs
 }
 
-func checkPasswordStrength(
-	password string,
-) string {
-
-	if len(password) < minPasswordLength {
-		return "minimal 8 karakter"
-	}
-
-	var hasLetter bool
-	var hasDigit bool
-
-	for _, r := range password {
-		switch {
-		case unicode.IsLetter(r):
-			hasLetter = true
-
-		case unicode.IsDigit(r):
-			hasDigit = true
-		}
-	}
-
-	if !hasLetter || !hasDigit {
-		return "harus memuat huruf dan angka"
-	}
-
-	weak := map[string]bool{
-		"password1":  true,
-		"12345678":   true,
-		"qwerty123":  true,
-		"admin123":   true,
-		"password123": true,
-	}
-
-	if weak[strings.ToLower(password)] {
-		return "password terlalu umum"
-	}
-
-	return ""
-}
-
-func isValidUsername(
-	username string,
-) bool {
-
-	for _, r := range username {
-		if !unicode.IsLetter(r) &&
-			!unicode.IsDigit(r) &&
-			r != '.' &&
-			r != '_' {
-
-			return false
-		}
-	}
-
-	return true
-}
-
-func isValidEmail(
-	email string,
-) bool {
-
-	email = strings.TrimSpace(email)
-
-	if email == "" {
-		return false
-	}
-
-	at := strings.Index(email, "@")
-
-	if at <= 0 {
-		return false
-	}
-
-	dot := strings.LastIndex(email, ".")
-
-	if dot <= at+1 {
-		return false
-	}
-
-	if dot >= len(email)-1 {
-		return false
-	}
-
-	return true
-}
+// Fungsi ini sengaja tidak lagi menangani Register.
+// Validasi Register sekarang berada pada tag
+// model.RegisterRequest.
+//
+// RegisterRequest:
+//
+// Username -> required,min,max,username
+// Email    -> required,email,max
+// Password -> required,max,strongpassword

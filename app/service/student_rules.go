@@ -6,78 +6,49 @@ import (
 	"api-students/app/model"
 )
 
-func ValidateCreateRequest(
-	req model.CreateStudentRequest,
-) map[string]string {
-
-	errors := make(map[string]string)
-
-	if strings.TrimSpace(req.NIM) == "" {
-		errors["nim"] = "NIM wajib diisi"
-	}
-
-	if strings.TrimSpace(req.Name) == "" {
-		errors["name"] = "nama wajib diisi"
-	}
-
-	if req.Grade < 0 || req.Grade > 100 {
-		errors["grade"] =
-			"grade harus berada pada rentang 0 sampai 100"
-	}
-
-	return errors
-}
-
-func ValidateReplaceRequest(
-	req model.ReplaceStudentRequest,
-) map[string]string {
-
-	errors := make(map[string]string)
-
-	if strings.TrimSpace(req.NIM) == "" {
-		errors["nim"] = "NIM wajib diisi"
-	}
-
-	if strings.TrimSpace(req.Name) == "" {
-		errors["name"] = "nama wajib diisi"
-	}
-
-	if req.Grade < 0 || req.Grade > 100 {
-		errors["grade"] =
-			"grade harus berada pada rentang 0 sampai 100"
-	}
-
-	return errors
-}
-
-func ValidatePatchRequest(
+// ApplyPatch menerapkan perubahan dari PATCH
+// ke data Student yang sedang ada.
+//
+// Validasi bentuk request dilakukan oleh validator.
+// Fungsi ini hanya bertugas menggabungkan perubahan.
+func ApplyStudentPatch(
+	current model.Student,
 	req model.PatchStudentRequest,
-) map[string]string {
+) model.Student {
 
-	errors := make(map[string]string)
-
-	if req.NIM != nil &&
-		strings.TrimSpace(*req.NIM) == "" {
-
-		errors["nim"] = "NIM tidak boleh kosong"
+	if req.NIM != nil {
+		current.NIM = strings.TrimSpace(*req.NIM)
 	}
 
-	if req.Name != nil &&
-		strings.TrimSpace(*req.Name) == "" {
-
-		errors["name"] = "nama tidak boleh kosong"
+	if req.Name != nil {
+		current.Name = strings.TrimSpace(*req.Name)
 	}
 
-	if req.Grade != nil &&
-		(*req.Grade < 0 || *req.Grade > 100) {
-
-		errors["grade"] =
-			"grade harus berada pada rentang 0 sampai 100"
+	if req.Grade != nil {
+		current.Grade = *req.Grade
 	}
 
-	return errors
+	if req.IsActive != nil {
+		current.IsActive = *req.IsActive
+	}
+
+	return current
 }
 
+// IsEmptyStudentPatch memeriksa apakah PATCH
+// tidak mengirim field apa pun.
+func IsEmptyStudentPatch(
+	req model.PatchStudentRequest,
+) bool {
+
+	return req.NIM == nil &&
+		req.Name == nil &&
+		req.Grade == nil &&
+		req.IsActive == nil
+}
+
+// CalculateTotalPages masih dipakai oleh pagination lama.
+// Akan dihapus/diganti ketika cursor pagination selesai.
 func CalculateTotalPages(
 	limit int,
 	total int,

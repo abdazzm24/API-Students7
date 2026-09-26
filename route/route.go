@@ -44,12 +44,7 @@ func Register(
 				c.UserContext(),
 			); err != nil {
 
-				return helper.Fail(
-					c,
-					fiber.StatusServiceUnavailable,
-					"database tidak dapat dihubungi",
-					nil,
-				)
+				return helper.ServiceUnavailable("database tidak dapat dihubungi")
 			}
 
 			return helper.Success(

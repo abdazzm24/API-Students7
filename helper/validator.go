@@ -166,7 +166,10 @@ func messageFor(fe validator.FieldError) string {
 		return "tidak boleh hanya berisi spasi"
 
 	case "strongpassword":
-		return checkPasswordStrength(fe.Value().(string))
+		if value, ok := fe.Value().(string); ok {
+			return checkPasswordStrength(value)
+		}
+		return "password tidak memenuhi syarat"
 
 	case "omitnil":
 		return "tidak memenuhi aturan"
@@ -210,10 +213,10 @@ func checkPasswordStrength(password string) string {
 	}
 
 	weak := map[string]bool{
-		"password1":  true,
-		"12345678":   true,
-		"qwerty123":  true,
-		"admin123":   true,
+		"password1":   true,
+		"12345678":    true,
+		"qwerty123":   true,
+		"admin123":    true,
 		"password123": true,
 	}
 

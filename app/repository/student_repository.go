@@ -22,6 +22,11 @@ type StudentRepository interface {
 		limit int,
 	) ([]model.Student, int, error)
 
+	FindAfterCursor(
+		ctx context.Context,
+		q model.CursorQuery,
+	) ([]model.Student, error)
+
 	FindByID(
 		ctx context.Context,
 		id int,
@@ -205,6 +210,70 @@ func (r *studentRepositoryImpl) List(
 	}
 
 	return result, total, nil
+}
+
+func (r *studentRepositoryImpl) FindAfterCursor(
+	ctx context.Context,
+	q model.CursorQuery,
+) ([]model.Student, error) {
+	args := []any{}
+	where := " WHERE 1 = 1"
+
+	if q.Search != "" {
+		args = append(args, "%"+q.Search+"%")
+		where += fmt.Sprintf(" AND LOWER(name) LIKE LOWER($%d)", len(args))
+	}
+	if q.IsActive != nil {
+		args = append(args, *q.IsActive)
+		where += fmt.Sprintf(" AND is_active = $%d", len(args))
+	}
+	if q.After != nil {
+		args = append(args, q.After.ID)
+		where += fmt.Sprintf(" AND id < $%d", len(args))
+	}
+
+	args = append(args, q.Limit+1)
+	query := fmt.Sprintf(`
+		SELECT id, nim, name, grade, is_active, owner_id
+		FROM students%s
+		ORDER BY id DESC
+		LIMIT $%d
+	`, where, len(args))
+
+	rows, err := r.DB.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("mengambil daftar student: %w", err)
+	}
+	defer rows.Close()
+
+	result := []model.Student{}
+	for rows.Next() {
+		var s model.Student
+		var ownerID *int
+
+		if err := rows.Scan(
+			&s.ID,
+			&s.NIM,
+			&s.Name,
+			&s.Grade,
+			&s.IsActive,
+			&ownerID,
+		); err != nil {
+			return nil, fmt.Errorf("membaca row student: %w", err)
+		}
+
+		if ownerID != nil {
+			s.OwnerID = *ownerID
+		}
+
+		result = append(result, s)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("membaca hasil query: %w", err)
+	}
+
+	return result, nil
 }
 
 func (r *studentRepositoryImpl) FindByID(
