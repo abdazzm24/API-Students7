@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"log/slog"
 	"strings"
 	"time"
@@ -55,71 +56,33 @@ func corsPolicy(
 	)
 }
 
-func RequestLogger(
-	logger *slog.Logger,
-) fiber.Handler {
-
+func RequestLogger(logger *slog.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-
 		start := time.Now()
 
 		err := c.Next()
 
-		requestID, _ :=
-			c.Locals("requestid").(string)
+		requestID, _ := c.Locals("requestid").(string)
+
+		// Ambil status dari *AppError jika ada,
+		// karena Fiber belum tentu menulis status ke response
+		// sebelum middleware ini membacanya.
+		status := c.Response().StatusCode()
+		var appErr *helper.AppError
+		if errors.As(err, &appErr) {
+			status = appErr.Status
+		}
 
 		attrs := []any{
-			slog.String(
-				"request_id",
-				requestID,
-			),
-
-			slog.String(
-				"method",
-				c.Method(),
-			),
-
-			slog.String(
-				"path",
-				c.Path(),
-			),
-
-			slog.Int(
-				"status",
-				c.Response().StatusCode(),
-			),
-
-			slog.Duration(
-				"duration",
-				time.Since(start),
-			),
-
-			slog.String(
-				"ip",
-				c.IP(),
-			),
+			slog.String("request_id", requestID),
+			slog.String("method", c.Method()),
+			slog.String("path", c.Path()),
+			slog.Int("status", status),
+			slog.Duration("duration", time.Since(start)),
+			slog.String("ip", c.IP()),
 		}
 
-		// Tambahkan identitas user jika sudah login.
-		if user, ok := helper.CurrentUser(c); ok {
-
-			attrs = append(
-				attrs,
-				slog.Int(
-					"user_id",
-					user.UserID,
-				),
-				slog.String(
-					"role",
-					user.Role,
-				),
-			)
-		}
-
-		logger.Info(
-			"http_request",
-			attrs...,
-		)
+		logger.Info("http_request", attrs...)
 
 		return err
 	}
@@ -146,12 +109,7 @@ func RequireJSON(
 			fiber.MIMEApplicationJSON,
 		) {
 
-			return helper.Fail(
-				c,
-				fiber.StatusUnsupportedMediaType,
-				"Content-Type harus application/json",
-				nil,
-			)
+			return helper.UnsupportedMediaType("Content-Type harus application/json")
 		}
 	}
 
